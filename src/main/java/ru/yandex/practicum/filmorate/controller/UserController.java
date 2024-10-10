@@ -27,10 +27,7 @@ public class UserController {
     @PostMapping
     public User create(@Valid @RequestBody User user) {
         log.info("Создаем нового пользователя {}", user.getLogin());
-        if (user.getLogin().contains(" ")) {
-            log.error("Логин не должен содержать пробелы");
-            throw new ValidationException("Логин не должен содержать пробелы");
-        }
+        loginValidation(user);
         user.setId(getNextId());
         if (user.getName() == null || user.getName().isBlank() || user.getName().isEmpty())
             user.setName(user.getLogin());
@@ -44,10 +41,7 @@ public class UserController {
             log.error("Пользователь не найден");
             throw new NotFoundException("Пользователь не найден");
         }
-        if (user.getLogin().contains(" ")) {
-            log.error("Логин не должен содержать пробелы");
-            throw new ValidationException("Логин не должен содержать пробелы");
-        }
+        loginValidation(user);
         log.info("Обновляем пользователя {}", user.getLogin());
         users.replace(user.getId(), user);
         return user;
@@ -60,5 +54,12 @@ public class UserController {
                 .max()
                 .orElse(0);
         return ++currentMaxId;
+    }
+
+    private void loginValidation(User user) {
+        if (user.getLogin().contains(" ")) {
+            log.error("Логин не должен содержать пробелы");
+            throw new ValidationException("Логин не должен содержать пробелы");
+        }
     }
 }

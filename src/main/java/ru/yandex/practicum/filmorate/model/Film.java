@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -23,4 +25,5 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
+    private List<Integer> likes = new ArrayList<>();
 }

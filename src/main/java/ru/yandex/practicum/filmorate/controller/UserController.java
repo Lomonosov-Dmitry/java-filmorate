@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.Collection;
 
 @RestController
-//@RequestMapping("/users")
 public class UserController {
 
     private static final Logger log = (Logger) LoggerFactory.getLogger(UserController.class);

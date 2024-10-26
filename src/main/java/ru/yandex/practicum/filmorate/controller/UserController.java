@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import ch.qos.logback.classic.Logger;
 import jakarta.validation.Valid;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -14,7 +12,6 @@ import java.util.Collection;
 @RestController
 public class UserController {
 
-    private static final Logger log = (Logger) LoggerFactory.getLogger(UserController.class);
     private final UserStorage userStorage;
     private final UserService userService;
 
@@ -25,12 +22,12 @@ public class UserController {
 
     @GetMapping("/users")
     public Collection<User> findAll() {
-        return userStorage.findAll();
+        return userService.findAll();
     }
 
     @GetMapping("/users/{id}")
     public User getUser(@PathVariable Integer id) {
-        return userStorage.getUserById(id);
+        return userService.getUserById(id);
     }
 
     @GetMapping("/users/{id}/friends")
@@ -46,12 +43,12 @@ public class UserController {
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User user) {
-        return userStorage.create(user);
+        return userService.create(user);
     }
 
     @PutMapping("/users")
     public User update(@Valid @RequestBody User user) {
-        return userStorage.update(user);
+        return userService.update(user);
     }
 
     @PutMapping("/users/{id}/friends/{friendId}")
@@ -60,8 +57,8 @@ public class UserController {
     }
 
     @DeleteMapping("/users")
-    public User delete(@RequestBody User user) {
-        return userStorage.delete(user);
+    public Integer delete(@RequestBody User user) {
+        return userService.delete(user.getId());
     }
 
     @DeleteMapping("/users/{id}/friends/{friendId}")

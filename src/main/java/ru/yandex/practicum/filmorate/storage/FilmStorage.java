@@ -10,7 +10,7 @@ public interface FilmStorage {
 
     public Film update(Film film);
 
-    public Film delete(Film film);
+    public Integer delete(Integer filmId);
 
     public Collection<Film> findAll();
 

@@ -1,53 +1,46 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import ch.qos.logback.classic.Logger;
 import jakarta.validation.Valid;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-
 
 import java.util.Collection;
 
 @RestController
 public class FilmController {
 
-    private static final Logger log = (Logger) LoggerFactory.getLogger(FilmController.class);
-    private final FilmStorage filmStorage;
     private final FilmService filmService;
 
     @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
-        this.filmStorage = filmStorage;
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
 
     @GetMapping("/films")
     public Collection<Film> findAll() {
-        return filmStorage.findAll();
+        return filmService.findAll();
     }
 
     @GetMapping("/films/{id}")
     public Film getFilmById(@PathVariable Integer id) {
-        return filmStorage.getFilmById(id);
+        return filmService.getFilmById(id);
     }
 
     @GetMapping("/films/popular")
     public Collection<Film> getPopular(@RequestParam(defaultValue = "10") Integer count) {
-        return filmStorage.getPopular(count);
+        return filmService.getPopular(count);
     }
 
     @PostMapping("/films")
     public Film create(@Valid @RequestBody Film film) {
-        return filmStorage.create(film);
+        return filmService.create(film);
     }
 
     @PutMapping("/films")
     public Film update(@Valid @RequestBody Film film) {
-        return filmStorage.update(film);
+        return filmService.update(film);
     }
 
     @PutMapping("/films/{id}/like/{userId}")
@@ -56,8 +49,8 @@ public class FilmController {
     }
 
     @DeleteMapping("/films")
-    public Film delete(@RequestBody Film film) {
-        return filmStorage.delete(film);
+    public Integer delete(@RequestBody Film film) {
+        return filmService.delete(film.getId());
     }
 
     @DeleteMapping("/films/{id}/like/{userId}")

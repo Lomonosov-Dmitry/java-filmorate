@@ -10,7 +10,7 @@ public interface UserStorage {
 
     public User update(User user);
 
-    public User delete(User user);
+    public Integer delete(Integer userId);
 
     public Collection<User> findAll();
 

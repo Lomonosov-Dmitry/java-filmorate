@@ -42,11 +42,11 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film delete(Film film) {
-        log.info("Удаляем фильм {}", film.getName());
-        existenseValidation(film.getId());
-        films.remove(film.getId());
-        return film;
+    public Integer delete(Integer filmId) {
+        log.info("Удаляем фильм {}", filmId);
+        existenseValidation(filmId);
+        films.remove(filmId);
+        return filmId;
     }
 
     @Override

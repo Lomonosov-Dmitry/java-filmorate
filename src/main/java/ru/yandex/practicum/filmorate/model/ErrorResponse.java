@@ -1,10 +1,10 @@
-package ru.yandex.practicum.filmorate.exception;
+package ru.yandex.practicum.filmorate.model;
 
-public class ValidationException extends RuntimeException {
+public class ErrorResponse {
     private String error;
     private String description;
 
-    public ValidationException(String error, String description) {
+    public ErrorResponse(String error, String description) {
         this.error = error;
         this.description = description;
     }

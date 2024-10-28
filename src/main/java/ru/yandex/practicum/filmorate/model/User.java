@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Data
@@ -16,4 +18,14 @@ public class User {
     private String name;
     @PastOrPresent(message = "День рождения не может быть в будущем")
     private LocalDate birthday;
+    private List<Integer> friends = new ArrayList<>();
+
+    public void addFriend(int friendId) {
+        friends.add(friendId);
+    }
+
+    public void removeFriend(int friendId) {
+        if (friends.contains(friendId))
+            friends.remove((Object) friendId);
+    }
 }

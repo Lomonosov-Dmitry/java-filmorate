@@ -18,7 +18,9 @@ public class UserService {
     private static final Logger log = (Logger) LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-    public UserService(@Qualifier("SqlUserStorage") UserStorage userStorage) { this.userStorage = userStorage; }
+    public UserService(@Qualifier("SqlUserStorage") UserStorage userStorage) {
+        this.userStorage = userStorage;
+    }
 
     public User addToFriends(Integer userId, Integer friendId) {
         log.info("Добавляем {} в друзья к {}", userId, friendId);

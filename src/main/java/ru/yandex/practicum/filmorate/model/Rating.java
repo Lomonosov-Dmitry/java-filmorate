@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class rating {
+public class Rating {
     private int id;
     @NotNull(message = "Название не должно быть null")
     @NotBlank(message = "Название не может быть пустым")

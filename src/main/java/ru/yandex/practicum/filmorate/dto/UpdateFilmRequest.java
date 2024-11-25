@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,12 +10,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * Film.
- */
 @Data
-public class Film {
+public class UpdateFilmRequest {
     private int id;
     @NotNull(message = "Название не должно быть null")
     @NotBlank(message = "Название не может быть пустым")
@@ -25,8 +21,8 @@ public class Film {
     private LocalDate releaseDate;
     @Positive
     private int duration;
-    private Rating mpa;
-    private List<Integer> genres = new ArrayList<>();
-    private List<Integer> likes = new ArrayList<>();
+    private ShortMpa mpa;
+    private List<ShortGenre> genres = new ArrayList<>();
+    private List<ShortLike> likes = new ArrayList<>();
 }
 

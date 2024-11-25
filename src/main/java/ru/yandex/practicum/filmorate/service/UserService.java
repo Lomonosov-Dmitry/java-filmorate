@@ -3,9 +3,10 @@ package ru.yandex.practicum.filmorate.service;
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.dal.UserStorage;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,9 +18,7 @@ public class UserService {
     private static final Logger log = (Logger) LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    public UserService(@Qualifier("SqlUserStorage") UserStorage userStorage) { this.userStorage = userStorage; }
 
     public User addToFriends(Integer userId, Integer friendId) {
         log.info("Добавляем {} в друзья к {}", userId, friendId);
@@ -27,6 +26,7 @@ public class UserService {
         User friend = userStorage.getUserById(friendId);
         user.addFriend(friendId);
         friend.addFriend(userId);
+        userStorage.update(user);
         return user;
     }
 
@@ -36,6 +36,7 @@ public class UserService {
         User friend = userStorage.getUserById(friendId);
         user.removeFriend(friendId);
         friend.removeFriend(userId);
+        userStorage.update(user);
         return user;
     }
 

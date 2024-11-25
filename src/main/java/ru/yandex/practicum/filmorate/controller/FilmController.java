@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
+import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -19,12 +22,12 @@ public class FilmController {
     }
 
     @GetMapping("/films")
-    public Collection<Film> findAll() {
+    public Collection<FilmDto> findAll() {
         return filmService.findAll();
     }
 
     @GetMapping("/films/{id}")
-    public Film getFilmById(@PathVariable Integer id) {
+    public FilmDto getFilmById(@PathVariable Integer id) {
         return filmService.getFilmById(id);
     }
 
@@ -34,17 +37,17 @@ public class FilmController {
     }
 
     @PostMapping("/films")
-    public Film create(@Valid @RequestBody Film film) {
-        return filmService.create(film);
+    public FilmDto create(@Valid @RequestBody NewFilmRequest request) {
+        return filmService.create(request);
     }
 
     @PutMapping("/films")
-    public Film update(@Valid @RequestBody Film film) {
-        return filmService.update(film);
+    public FilmDto update(@Valid @RequestBody UpdateFilmRequest request) {
+        return filmService.update(request);
     }
 
     @PutMapping("/films/{id}/like/{userId}")
-    public Film likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+    public FilmDto likeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
         return filmService.likeFilm(id, userId);
     }
 
@@ -54,7 +57,7 @@ public class FilmController {
     }
 
     @DeleteMapping("/films/{id}/like/{userId}")
-    public Film dislikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
+    public FilmDto dislikeFilm(@PathVariable Integer id, @PathVariable Integer userId) {
         return filmService.dislikeFilm(id, userId);
     }
 }

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dal;
 
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.time.LocalDate;
 import java.util.*;
 
-@Component
+@Component("InMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Integer, Film> films = new HashMap<>();
@@ -53,27 +53,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Collection<Film> findAll() {
         log.info("Возвращаем все фильмы");
         return films.values().stream().toList();
-    }
-
-    @Override
-    public Collection<Film> getPopular(Integer count) {
-        if (count <= 0) {
-            log.error("Передано неверное значение count - {}", count);
-            throw new ValidationException("Передано неверное значение count", "Значение должно быть больше нуля");
-        }
-        List<Film> sorted = new ArrayList<>(films.values().stream()
-                .sorted(Comparator.comparingInt(film -> film.getLikes().size()))
-                .toList());
-        Collections.reverse(sorted);
-        List<Film> popular = new ArrayList<>();
-        if (sorted.size() < count)
-            return sorted;
-        else {
-            for (int i = 0; i < count; i++) {
-                popular.add(sorted.get(i));
-            }
-            return popular;
-        }
     }
 
     private int getNextId() {

@@ -83,12 +83,12 @@ public class SqlFilmStorage implements FilmStorage {
         int filmId = film.getId();
         if (!checkFilm(filmId))
             throw new NotFoundException("Не найдено", "Не найден фильм с ID = " + filmId);
-        jdbcTemplate.update(UPDATE_QUERY
-                , film.getName()
-                , film.getDescription()
-                , film.getReleaseDate()
-                , film.getDuration()
-                , filmId);
+        jdbcTemplate.update(UPDATE_QUERY,
+                film.getName(),
+                film.getDescription(),
+                film.getReleaseDate(),
+                film.getDuration(),
+                filmId);
         if (film.getMpa() != null) {
             if (!checkMpa(film.getMpa().getId()))
                 throw new ValidationException("Не найдено", "Не найден рейтинг с ID = " + film.getMpa());

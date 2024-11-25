@@ -53,12 +53,12 @@ public class SqlUserStorage implements UserStorage {
     public User update(User user) {
         int userId = user.getId();
         getUserById(userId);
-        jdbcTemplate.update(UPDATE_QUERY
-                , user.getEmail()
-                , user.getLogin()
-                , user.getName()
-                , user.getBirthday()
-                , userId);
+        jdbcTemplate.update(UPDATE_QUERY,
+                user.getEmail(),
+                user.getLogin(),
+                user.getName(),
+                user.getBirthday(),
+                userId);
         jdbcTemplate.update(DELETE_USER_FRIENDS, userId);
         if (!user.getFriends().isEmpty()) {
             for (Integer friend : user.getFriends()) {

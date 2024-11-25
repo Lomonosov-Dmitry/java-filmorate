@@ -41,9 +41,9 @@ public class MpaStorage {
     }
 
     public Rating update(Rating rating) {
-        jdbcTemplate.update(UPDATE_QUERY
-                , rating.getName()
-                , rating.getId());
+        jdbcTemplate.update(UPDATE_QUERY,
+                rating.getName(),
+                rating.getId());
         return rating;
     }
 

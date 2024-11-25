@@ -41,9 +41,9 @@ public class GenresStorage {
     }
 
     public Genre update(Genre genre) {
-        jdbcTemplate.update(UPDATE_QUERY
-                , genre.getName()
-                , genre.getId());
+        jdbcTemplate.update(UPDATE_QUERY,
+                genre.getName(),
+                genre.getId());
         return genre;
     }
 

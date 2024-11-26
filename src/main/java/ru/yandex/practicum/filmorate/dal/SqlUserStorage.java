@@ -15,6 +15,7 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Repository
 @Qualifier("SqlUserStorage")
@@ -46,13 +47,15 @@ public class SqlUserStorage implements UserStorage {
             stmt.setDate(4, Date.valueOf(user.getBirthday()));
             return stmt;
         }, keyHolder);
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
         return user;
     }
 
     @Override
     public User update(User user) {
         int userId = user.getId();
-        getUserById(userId);
+        if (!checkUser(userId))
+            throw new NotFoundException("Не найдено", "Не найден пользователь с ID = " + userId);
         jdbcTemplate.update(UPDATE_QUERY,
                 user.getEmail(),
                 user.getLogin(),
@@ -93,7 +96,10 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public User getUserById(Integer userId) {
         try {
-            return jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new UserRowMapper(), userId);
+            User user = jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new UserRowMapper(), userId);
+            if (user != null)
+                user.setFriends(getFriends(userId));
+            return user;
         } catch (EmptyResultDataAccessException ex) {
             throw new NotFoundException("Не найдено", "Не найден пользователь с ID = " + userId);
         }
@@ -102,4 +108,14 @@ public class SqlUserStorage implements UserStorage {
     private List<Integer> getFriends(int userId) {
         return jdbcTemplate.query(GET_FRIENDS_QUERY, new FriendsRowMapper(), userId);
     }
+
+    private boolean checkUser(Integer userId) {
+        try {
+            jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new UserRowMapper(), userId);
+            return true;
+        } catch (EmptyResultDataAccessException ex) {
+            return false;
+        }
+    }
 }
+

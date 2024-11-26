@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 
 import java.time.LocalDate;
@@ -25,6 +26,6 @@ public class FilmDto {
     @Positive
     private int duration;
     private Rating mpa;
-    private List<ShortGenre> genres = new ArrayList<>();
+    private List<Genre> genres = new ArrayList<>();
     private List<ShortLike> likes = new ArrayList<>();
 }

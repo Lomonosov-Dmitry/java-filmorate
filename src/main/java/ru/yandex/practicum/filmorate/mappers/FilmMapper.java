@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Rating;
 
 import java.util.ArrayList;
@@ -27,6 +28,11 @@ public final class FilmMapper {
             film.setGenres(request.getGenres()
                     .stream()
                     .map(ShortGenre::getId)
+                            .map(id -> {
+                                Genre genre = new Genre();
+                                genre.setId(id);
+                                return genre;
+                            })
                     .toList());
         }
         if (!request.getLikes().isEmpty()) {
@@ -49,13 +55,7 @@ public final class FilmMapper {
             dto.setMpa(film.getMpa());
         }
         if (!film.getGenres().isEmpty()) {
-            List<ShortGenre> genres = new ArrayList<>();
-            for (Integer genreId : film.getGenres()) {
-                ShortGenre genre = new ShortGenre();
-                genre.setId(genreId);
-                genres.add(genre);
-            }
-            dto.setGenres(genres);
+            dto.setGenres(film.getGenres());
         }
         if (!film.getLikes().isEmpty()) {
             List<ShortLike> likes = new ArrayList<>();
@@ -85,6 +85,11 @@ public final class FilmMapper {
             film.setGenres(request.getGenres()
                     .stream()
                     .map(ShortGenre::getId)
+                    .map(id -> {
+                        Genre genre = new Genre();
+                        genre.setId(id);
+                        return genre;
+                    })
                     .toList());
         }
         if (!request.getLikes().isEmpty()) {

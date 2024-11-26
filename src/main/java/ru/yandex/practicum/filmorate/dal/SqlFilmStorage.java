@@ -6,13 +6,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dal.rowmappers.FilmGenreRowMapper;
-import ru.yandex.practicum.filmorate.dal.rowmappers.FilmLikesRowMapper;
-import ru.yandex.practicum.filmorate.dal.rowmappers.FilmRowMapper;
-import ru.yandex.practicum.filmorate.dal.rowmappers.RatingRowMapper;
+import ru.yandex.practicum.filmorate.dal.rowmappers.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -34,7 +32,10 @@ public class SqlFilmStorage implements FilmStorage {
     private static final String INSERT_QUERY = "INSERT INTO Films(Name, Description, ReleaseDate, Duration)" +
             "VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE Films SET Name = ?, Description = ?, ReleaseDate = ?, Duration = ? WHERE id = ?";
-    private static final String GET_FILM_GENRES = "SELECT Genre FROM Film_Genre WHERE Film = ?";
+    private static final String GET_FILM_GENRES = "SELECT g.id, g.name " +
+            "FROM GENRES AS g " +
+            "JOIN film_genre AS fg ON g.id = fg.genre " +
+            "WHERE fg.film=? GROUP BY g.ID";
     private static final String DELETE_FILM_GENRES = "DELETE FROM Film_Genre WHERE Film = ?";
     private static final String INSERT_FILM_GENRE = "INSERT INTO Film_Genre(Film, Genre) VALUES (?, ?)";
     private static final String CHECK_MPA = "SELECT * FROM Ratings WHERE Id = ?";
@@ -104,7 +105,7 @@ public class SqlFilmStorage implements FilmStorage {
             jdbcTemplate.update(DELETE_FILM_LIKES, filmId);
             insertLikes(film);
         }
-        List<Integer> oldGenres = getGenres(filmId);
+        List<Genre> oldGenres = getGenres(filmId);
         if (film.getGenres().isEmpty() && oldGenres != null)
             jdbcTemplate.update(DELETE_FILM_GENRES, filmId);
 
@@ -121,9 +122,9 @@ public class SqlFilmStorage implements FilmStorage {
     public Collection<Film> findAll() {
         List<Film> films;
         try {
-             films = jdbcTemplate.query(FIND_ALL_QUERY, new FilmRowMapper());
+            films = jdbcTemplate.query(FIND_ALL_QUERY, new FilmRowMapper());
         } catch (EmptyResultDataAccessException ex) {
-             films = null;
+            films = null;
         }
         if (films != null) {
             for (Film film : films) {
@@ -140,6 +141,9 @@ public class SqlFilmStorage implements FilmStorage {
             Film film = jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new FilmRowMapper(), filmId);
             film.setLikes(getLikes(filmId));
             film.setGenres(getGenres(filmId));
+            if (film.getMpa() != null) {
+                film.setMpa(jdbcTemplate.queryForObject("SELECT * FROM Ratings WHERE Id = ?", new RatingRowMapper(), film.getMpa().getId()));
+            }
             return film;
         } catch (EmptyResultDataAccessException ex) {
             throw new ValidationException("Не найдено", "Не найден фильм с ID = " + filmId);
@@ -163,20 +167,20 @@ public class SqlFilmStorage implements FilmStorage {
         }
     }
 
-    private List<Integer> getGenres(Integer filmId) {
+    private List<Genre> getGenres(Integer filmId) {
         try {
-            return jdbcTemplate.query(GET_FILM_GENRES, new FilmGenreRowMapper(), filmId);
+            return jdbcTemplate.query(GET_FILM_GENRES, new GenreRowMapper(), filmId);
         } catch (EmptyResultDataAccessException ex) {
             return null;
         }
     }
 
     private void insertGenres(Film film) {
-        for (Integer genre : film.getGenres()) {
-            if (!checkGenre(genre))
+        for (Genre genre : film.getGenres()) {
+            if (!checkGenre(genre.getId()))
                 throw new ValidationException("Не найдено", "Не найден жанр с ID = " + genre);
             else
-                jdbcTemplate.update(INSERT_FILM_GENRE, film.getId(), genre);
+                jdbcTemplate.update(INSERT_FILM_GENRE, film.getId(), genre.getId());
         }
     }
 

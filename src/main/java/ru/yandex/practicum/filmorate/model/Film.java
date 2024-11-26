@@ -26,7 +26,7 @@ public class Film {
     @Positive
     private int duration;
     private Rating mpa;
-    private List<Integer> genres = new ArrayList<>();
+    private List<Genre> genres = new ArrayList<>();
     private List<Integer> likes = new ArrayList<>();
 }
 

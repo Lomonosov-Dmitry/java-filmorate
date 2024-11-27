@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -7,6 +9,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.rowmappers.*;
+import ru.yandex.practicum.filmorate.dto.FilmGenre;
+import ru.yandex.practicum.filmorate.dto.LikesTable;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -15,13 +19,12 @@ import ru.yandex.practicum.filmorate.validators.Validator;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Repository("SqlFilmStorage")
 public class SqlFilmStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = (Logger) LoggerFactory.getLogger(SqlFilmStorage.class);
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM Films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM Films WHERE id = ?";
@@ -61,21 +64,25 @@ public class SqlFilmStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        log.info("Создали новый фильм с ID = {}", film.getId());
         if (film.getMpa() != null) {
             if (!Validator.checkOne(jdbcTemplate, CHECK_MPA, new RatingRowMapper(), film.getMpa().getId()))
                 throw new ValidationException("Не найдено", "Не найден рейтинг с ID = " + film.getMpa());
             else {
                 jdbcTemplate.update("UPDATE Films SET Rating_Id = ? WHERE ID = ?", film.getMpa().getId(), film.getId());
                 film.setMpa(jdbcTemplate.queryForObject("SELECT * FROM Ratings WHERE Id = ?", new RatingRowMapper(), film.getMpa().getId()));
+                log.info("Добавили рейтинги фильму с ID = {}", film.getId());
             }
         }
         if (!film.getGenres().isEmpty()) {
             insertGenres(film);
+            log.info("Добавили жанры фильму с ID = {}", film.getId());
         }
         if (!film.getLikes().isEmpty()) {
             insertLikes(film);
+            log.info("Добавили лайки фильму с ID = {}", film.getId());
         }
-
+        log.info("Вернули фильм с ID = {}", film.getId());
         return film;
     }
 
@@ -90,12 +97,14 @@ public class SqlFilmStorage implements FilmStorage {
                 film.getReleaseDate(),
                 film.getDuration(),
                 filmId);
+        log.info("Обновили фильм с ID = {}", film.getId());
         if (film.getMpa() != null) {
             if (!Validator.checkOne(jdbcTemplate, CHECK_MPA, new RatingRowMapper(), film.getMpa().getId()))
                 throw new ValidationException("Не найдено", "Не найден рейтинг с ID = " + film.getMpa());
             else {
                 jdbcTemplate.update("UPDATE Films SET Rating_Id = ? WHERE ID = ?", film.getMpa().getId(), film.getId());
                 film.setMpa(jdbcTemplate.queryForObject("SELECT * FROM Ratings WHERE Id = ?", new RatingRowMapper(), film.getMpa().getId()));
+                log.info("Обновили рейтинги фильму с ID = {}", film.getId());
             }
         }
         List<Integer> oldLikes = getLikes(filmId);
@@ -104,22 +113,26 @@ public class SqlFilmStorage implements FilmStorage {
         if (!film.getLikes().equals(oldLikes)) {
             jdbcTemplate.update(DELETE_FILM_LIKES, filmId);
             insertLikes(film);
+            log.info("Обновили лайки фильму с ID = {}", film.getId());
         }
         List<Genre> oldGenres = getGenres(filmId);
         if (film.getGenres().isEmpty() && oldGenres != null)
             jdbcTemplate.update(DELETE_FILM_GENRES, filmId);
-
+        log.info("Обновили жанры фильму с ID = {}", film.getId());
+        log.info("Возвращаем фильм с ID = {}", film.getId());
         return film;
     }
 
     @Override
     public Integer delete(Integer filmId) {
         jdbcTemplate.update(DELETE_QUERY, filmId);
+        log.info("Удалили фильм с ID = {}", filmId);
         return filmId;
     }
 
     @Override
     public Collection<Film> findAll() {
+        log.info("Пришел запрос на все фильмы");
         List<Film> films;
         try {
             films = jdbcTemplate.query(FIND_ALL_QUERY, new FilmRowMapper());
@@ -127,11 +140,43 @@ public class SqlFilmStorage implements FilmStorage {
             films = null;
         }
         if (films != null) {
+            log.info("Фильмы есть, заполняем список");
+            List<LikesTable> likesTable;
+            List<FilmGenre> allFilmsGenres;
+            try {
+                likesTable = jdbcTemplate.query("SELECT * FROM LIKES", new LikesTableRowMapper());
+            } catch (EmptyResultDataAccessException ex) {
+                likesTable = null;
+            }
+            try {
+                allFilmsGenres = jdbcTemplate.query("SELECT * FROM FILM_GENRE", new FilmGenreRowMapper());
+            } catch (EmptyResultDataAccessException ex) {
+                allFilmsGenres = null;
+            }
             for (Film film : films) {
-                film.setLikes(getLikes(film.getId()));
-                film.setGenres(getGenres(film.getId()));
+                if (likesTable != null) {
+                    log.info("Лайки к фильму с ID = {} есть, заполняем", film.getId());
+                    film.setLikes(likesTable.stream()
+                            .filter(like -> like.getFilm() == film.getId())
+                            .map(LikesTable::getUserId)
+                            .toList());
+                    log.info("Лайки заполнили");
+                }
+                if (allFilmsGenres != null) {
+                    log.info("Жанры к фильму с ID = {} есть, заполняем", film.getId());
+                    film.setGenres(allFilmsGenres.stream()
+                            .filter(filmGenre -> filmGenre.getFilmId() == film.getId())
+                            .map((filmGenre) -> {
+                                Genre genre = new Genre();
+                                genre.setId(filmGenre.getGenreId());
+                                return genre;
+                            })
+                            .toList());
+                    log.info("Жанры заполнили");
+                }
             }
         }
+        log.info("Возвращаем фильмы");
         return films;
     }
 
@@ -144,6 +189,7 @@ public class SqlFilmStorage implements FilmStorage {
             if (film.getMpa() != null) {
                 film.setMpa(jdbcTemplate.queryForObject("SELECT * FROM Ratings WHERE Id = ?", new RatingRowMapper(), film.getMpa().getId()));
             }
+            log.info("Возвращаем фильм c ID = {}", filmId);
             return film;
         } catch (EmptyResultDataAccessException ex) {
             throw new ValidationException("Не найдено", "Не найден фильм с ID = " + filmId);
@@ -152,6 +198,7 @@ public class SqlFilmStorage implements FilmStorage {
 
     private List<Integer> getLikes(Integer filmId) {
         try {
+            log.info("Получаем лайки для фильма с ID = {}", filmId);
             return jdbcTemplate.query(GET_FILM_LIKES, new FilmLikesRowMapper(), filmId);
         } catch (EmptyResultDataAccessException ex) {
             return null;

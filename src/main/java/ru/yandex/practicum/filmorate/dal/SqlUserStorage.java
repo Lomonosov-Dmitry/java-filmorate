@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,6 +24,7 @@ import java.util.Objects;
 @Qualifier("SqlUserStorage")
 public class SqlUserStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
+    private static final Logger log = (Logger) LoggerFactory.getLogger(SqlUserStorage.class);
 
     private static final String FIND_ALL_QUERY = "SELECT * FROM Users";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM Users WHERE id = ?";
@@ -49,6 +52,7 @@ public class SqlUserStorage implements UserStorage {
             return stmt;
         }, keyHolder);
         user.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        log.info("Создали нового пользователя с ID = {}", user.getId());
         return user;
     }
 
@@ -69,12 +73,14 @@ public class SqlUserStorage implements UserStorage {
                 jdbcTemplate.update(ADD_FRIEND, userId, friend);
             }
         }
+        log.info("Обновили пользователя с ID = {}", user.getId());
         return user;
     }
 
     @Override
     public Integer delete(Integer userId) {
         jdbcTemplate.update(DELETE_QUERY, userId);
+        log.info("Удалили пользователя с ID = {}", userId);
         return userId;
     }
 
@@ -91,6 +97,7 @@ public class SqlUserStorage implements UserStorage {
                 user.setFriends(getFriends(user.getId()));
             }
         }
+        log.info("Возвращаем всех пользователей");
         return users;
     }
 
@@ -100,6 +107,7 @@ public class SqlUserStorage implements UserStorage {
             User user = jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new UserRowMapper(), userId);
             if (user != null)
                 user.setFriends(getFriends(userId));
+            log.info("Возвращаем пользователя с ID = {}", userId);
             return user;
         } catch (EmptyResultDataAccessException ex) {
             throw new NotFoundException("Не найдено", "Не найден пользователь с ID = " + userId);

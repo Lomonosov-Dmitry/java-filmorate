@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.*;
 public class FilmService {
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private static final Logger log = (Logger) LoggerFactory.getLogger(FilmService.class);
 
     @Autowired
     public FilmService(@Qualifier("SqlFilmStorage") FilmStorage filmStorage, @Qualifier("SqlUserStorage") UserStorage userStorage) {
@@ -65,6 +68,7 @@ public class FilmService {
                 .toList());
         Collections.reverse(sorted);
         List<Film> popular = new ArrayList<>();
+        log.info("Возвращаем рейтинг популярности");
         if (sorted.size() < count)
             return sorted;
         else {

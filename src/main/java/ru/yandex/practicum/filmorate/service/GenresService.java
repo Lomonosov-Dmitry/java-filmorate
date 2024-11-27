@@ -33,6 +33,6 @@ public class GenresService {
     }
 
     public Genre findOne(Integer genreId) {
-        return genresStorage.getMpaById(genreId);
+        return genresStorage.getGenreById(genreId);
     }
 }

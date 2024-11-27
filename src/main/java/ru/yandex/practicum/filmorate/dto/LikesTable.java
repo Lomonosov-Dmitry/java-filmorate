@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class LikesTable {
-    private int Film;
-    private int UserId;
+    private int film;
+    private int userId;
 }

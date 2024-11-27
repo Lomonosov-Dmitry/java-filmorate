@@ -30,20 +30,4 @@ public class MpaController {
     public Rating getMpaById(@PathVariable("mpaId") Integer mpaId) {
         return mpaService.findOne(mpaId);
     }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Rating create(@Valid @RequestBody Rating rating) {
-        return mpaService.create(rating);
-    }
-
-    @PutMapping
-    public Rating update(@Valid @RequestBody Rating rating) {
-        return mpaService.update(rating);
-    }
-
-    @DeleteMapping("/{mpaId}")
-    public Integer delete(@PathVariable("mpaId") Integer mpaId) {
-        return mpaService.delete(mpaId);
-    }
 }

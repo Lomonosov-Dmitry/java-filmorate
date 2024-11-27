@@ -31,19 +31,4 @@ public class GenresController {
         return genresService.findOne(genreId);
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public Genre create(@Valid @RequestBody Genre genre) {
-        return genresService.create(genre);
-    }
-
-    @PutMapping
-    public Genre update(@Valid @RequestBody Genre genre) {
-        return genresService.update(genre);
-    }
-
-    @DeleteMapping("/{genreId}")
-    public Integer delete(@PathVariable("genreId") Integer mpaId) {
-        return genresService.delete(mpaId);
-    }
 }

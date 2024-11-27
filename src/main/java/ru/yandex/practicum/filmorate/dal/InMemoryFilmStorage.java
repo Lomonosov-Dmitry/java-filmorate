@@ -4,11 +4,9 @@ import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validators.Validator;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Component("InMemoryFilmStorage")

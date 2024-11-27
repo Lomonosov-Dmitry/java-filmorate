@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -30,4 +31,19 @@ public class GenresController {
         return genresService.findOne(genreId);
     }
 
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Genre create(@Valid @RequestBody Genre genre) {
+        return genresService.create(genre);
+    }
+
+    @PutMapping
+    public Genre update(@Valid @RequestBody Genre genre) {
+        return genresService.update(genre);
+    }
+
+    @DeleteMapping("/{genreId}")
+    public Integer delete(@PathVariable("genreId") Integer mpaId) {
+        return genresService.delete(mpaId);
+    }
 }

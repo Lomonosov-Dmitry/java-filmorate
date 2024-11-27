@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.dal.rowmappers.FriendsRowMapper;
 import ru.yandex.practicum.filmorate.dal.rowmappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validators.Validator;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -54,7 +55,7 @@ public class SqlUserStorage implements UserStorage {
     @Override
     public User update(User user) {
         int userId = user.getId();
-        if (!checkUser(userId))
+        if (!Validator.checkOne(jdbcTemplate, FIND_BY_ID_QUERY, new UserRowMapper(), userId))
             throw new NotFoundException("Не найдено", "Не найден пользователь с ID = " + userId);
         jdbcTemplate.update(UPDATE_QUERY,
                 user.getEmail(),
@@ -107,15 +108,6 @@ public class SqlUserStorage implements UserStorage {
 
     private List<Integer> getFriends(int userId) {
         return jdbcTemplate.query(GET_FRIENDS_QUERY, new FriendsRowMapper(), userId);
-    }
-
-    private boolean checkUser(Integer userId) {
-        try {
-            jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new UserRowMapper(), userId);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
     }
 }
 

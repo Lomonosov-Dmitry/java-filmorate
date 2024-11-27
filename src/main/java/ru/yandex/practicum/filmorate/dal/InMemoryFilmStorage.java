@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.validators.Validator;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -26,7 +27,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         log.info("Добавляем новый фильм {}", film.getName());
-        releaseValidation(film);
+        Validator.releaseValidation(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
         return film;
@@ -35,7 +36,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         log.info("Обновляем фильм {}", film.getName());
-        releaseValidation(film);
+        Validator.releaseValidation(film);
         existenseValidation(film.getId());
         films.replace(film.getId(), film);
         return film;
@@ -63,13 +64,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElse(0);
         return ++currentMaxId;
 
-    }
-
-    private void releaseValidation(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.error("Дата релиза должна быть позже 28.12.1895, а передано {}", film.getReleaseDate());
-            throw new ValidationException("Передана неверная дата релиза", "Дата релиза должна быть позже 28.12.1895");
-        }
     }
 
     private void existenseValidation(Integer filmId) {

@@ -11,10 +11,10 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.validators.Validator;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +50,7 @@ public class SqlFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         if (film.getReleaseDate() != null)
-            releaseValidation(film);
+            Validator.releaseValidation(film);
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(INSERT_QUERY, new String[]{"id"});
@@ -62,7 +62,7 @@ public class SqlFilmStorage implements FilmStorage {
         }, keyHolder);
         film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
         if (film.getMpa() != null) {
-            if (!checkMpa(film.getMpa().getId()))
+            if (!Validator.checkOne(jdbcTemplate, CHECK_MPA, new RatingRowMapper(), film.getMpa().getId()))
                 throw new ValidationException("Не найдено", "Не найден рейтинг с ID = " + film.getMpa());
             else {
                 jdbcTemplate.update("UPDATE Films SET Rating_Id = ? WHERE ID = ?", film.getMpa().getId(), film.getId());
@@ -82,7 +82,7 @@ public class SqlFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         int filmId = film.getId();
-        if (!checkFilm(filmId))
+        if (!Validator.checkOne(jdbcTemplate, FIND_BY_ID_QUERY, new FilmRowMapper(), filmId))
             throw new NotFoundException("Не найдено", "Не найден фильм с ID = " + filmId);
         jdbcTemplate.update(UPDATE_QUERY,
                 film.getName(),
@@ -91,7 +91,7 @@ public class SqlFilmStorage implements FilmStorage {
                 film.getDuration(),
                 filmId);
         if (film.getMpa() != null) {
-            if (!checkMpa(film.getMpa().getId()))
+            if (!Validator.checkOne(jdbcTemplate, CHECK_MPA, new RatingRowMapper(), film.getMpa().getId()))
                 throw new ValidationException("Не найдено", "Не найден рейтинг с ID = " + film.getMpa());
             else {
                 jdbcTemplate.update("UPDATE Films SET Rating_Id = ? WHERE ID = ?", film.getMpa().getId(), film.getId());
@@ -160,7 +160,7 @@ public class SqlFilmStorage implements FilmStorage {
 
     private void insertLikes(Film film) {
         for (Integer userId : film.getLikes()) {
-            if (!checkUser(userId))
+            if (!Validator.checkOne(jdbcTemplate, CHECK_USER, new UserRowMapper(), userId))
                 throw new ValidationException("Не найдено", "Не найден пользователь с ID = " + userId);
             else
                 jdbcTemplate.update(INSERT_FILM_LIKE, film.getId(), userId);
@@ -177,52 +177,11 @@ public class SqlFilmStorage implements FilmStorage {
 
     private void insertGenres(Film film) {
         for (Genre genre : film.getGenres()) {
-            if (!checkGenre(genre.getId()))
+            if (!Validator.checkOne(jdbcTemplate, CHECK_GENRE, new GenreRowMapper(), genre.getId()))
                 throw new ValidationException("Не найдено", "Не найден жанр с ID = " + genre);
             else
                 jdbcTemplate.update(INSERT_FILM_GENRE, film.getId(), genre.getId());
         }
     }
 
-    private boolean checkFilm(Integer filmId) {
-        try {
-            jdbcTemplate.queryForObject(FIND_BY_ID_QUERY, new FilmRowMapper(), filmId);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
-    }
-
-    private boolean checkMpa(Integer mpaId) {
-        try {
-            jdbcTemplate.queryForObject(CHECK_MPA, new RatingRowMapper(), mpaId);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
-    }
-
-    private boolean checkUser(Integer userId) {
-        try {
-            jdbcTemplate.queryForObject(CHECK_USER, new RatingRowMapper(), userId);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
-    }
-
-    private boolean checkGenre(Integer genreId) {
-        try {
-            jdbcTemplate.queryForObject(CHECK_GENRE, new RatingRowMapper(), genreId);
-            return true;
-        } catch (EmptyResultDataAccessException ex) {
-            return false;
-        }
-    }
-
-    private void releaseValidation(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            throw new ValidationException("Передана неверная дата релиза", "Дата релиза должна быть позже 28.12.1895");
-        }
-    }
 }

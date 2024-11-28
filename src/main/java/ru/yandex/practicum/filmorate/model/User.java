@@ -19,7 +19,7 @@ public class User {
     @PastOrPresent(message = "День рождения не может быть в будущем")
     private LocalDate birthday;
     private List<Integer> friends = new ArrayList<>();
-    private List<Integer> possibleFriends = new ArrayList<>();
+    //private List<Integer> possibleFriends = new ArrayList<>();
 
     public void addFriend(int friendId) {
         friends.add(friendId);

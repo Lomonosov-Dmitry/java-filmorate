@@ -1,16 +1,15 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.dal;
 
 import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.validators.Validator;
 
-import java.time.LocalDate;
 import java.util.*;
 
-@Component
+@Component("InMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     private final Map<Integer, Film> films = new HashMap<>();
@@ -26,7 +25,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         log.info("Добавляем новый фильм {}", film.getName());
-        releaseValidation(film);
+        Validator.releaseValidation(film);
         film.setId(getNextId());
         films.put(film.getId(), film);
         return film;
@@ -35,7 +34,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         log.info("Обновляем фильм {}", film.getName());
-        releaseValidation(film);
+        Validator.releaseValidation(film);
         existenseValidation(film.getId());
         films.replace(film.getId(), film);
         return film;
@@ -55,27 +54,6 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.values().stream().toList();
     }
 
-    @Override
-    public Collection<Film> getPopular(Integer count) {
-        if (count <= 0) {
-            log.error("Передано неверное значение count - {}", count);
-            throw new ValidationException("Передано неверное значение count", "Значение должно быть больше нуля");
-        }
-        List<Film> sorted = new ArrayList<>(films.values().stream()
-                .sorted(Comparator.comparingInt(film -> film.getLikes().size()))
-                .toList());
-        Collections.reverse(sorted);
-        List<Film> popular = new ArrayList<>();
-        if (sorted.size() < count)
-            return sorted;
-        else {
-            for (int i = 0; i < count; i++) {
-                popular.add(sorted.get(i));
-            }
-            return popular;
-        }
-    }
-
     private int getNextId() {
         int currentMaxId = films.keySet()
                 .stream()
@@ -84,13 +62,6 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElse(0);
         return ++currentMaxId;
 
-    }
-
-    private void releaseValidation(Film film) {
-        if (film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
-            log.error("Дата релиза должна быть позже 28.12.1895, а передано {}", film.getReleaseDate());
-            throw new ValidationException("Передана неверная дата релиза", "Дата релиза должна быть позже 28.12.1895");
-        }
     }
 
     private void existenseValidation(Integer filmId) {
